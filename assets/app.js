@@ -456,8 +456,9 @@ MF.Narrativa = {
    Parte 2: controlador da página index.html (lançamentos)
    ========================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (document.body.dataset.pagina !== 'index') return;
+  await MF.Auth.exigirPin();
   initIndex();
 });
 
@@ -494,7 +495,12 @@ async function initIndex() {
   document.getElementById('btn-exportar-pdf').addEventListener('click', () => exportarComFeedback('btn-exportar-pdf', () => MF.Exportar.gerarPDF(periodo)));
 
   document.getElementById('btn-salvar-logo').addEventListener('click', async () => {
-    await MF.salvarConfiguracao('logo_url', document.getElementById('config-logo-url').value.trim());
+    const url = document.getElementById('config-logo-url').value.trim();
+    if (url && !/^https:\/\/.+\..+/.test(url)) {
+      MF.Util.toast('URL inválida. Use https://...', 'erro');
+      return;
+    }
+    await MF.salvarConfiguracao('logo_url', url);
     MF.Util.toast('LOGO SALVA ✓');
   });
   document.getElementById('btn-backup-exportar').addEventListener('click', baixarBackup);
@@ -1120,12 +1126,39 @@ async function exportarComFeedback(idBotao, fn) {
   }
 }
 
+function nomeArquivoBackup(extensao) {
+  const d = new Date();
+  const aaaa = d.getFullYear(), mm = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+  return `financeiro-backup-${aaaa}-${mm}-${dd}.${extensao}`;
+}
+
+function pedirSenhaBackup() {
+  const senha1 = prompt('Digite uma senha para proteger o backup:');
+  if (!senha1) return null;
+  const senha2 = prompt('Digite a senha novamente para confirmar:');
+  if (senha1 !== senha2) { alert('As senhas não coincidem. O backup será baixado sem senha.'); return null; }
+  return senha1;
+}
+
 async function baixarBackup() {
   const dados = await MF.exportarTudo();
-  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  const protegerComSenha = confirm('Proteger backup com senha? (recomendado)\n\nOK = com senha (arquivo cifrado)\nCancelar = sem senha (arquivo .json comum)');
+
+  let blob, nomeArquivo;
+  if (protegerComSenha) {
+    const senha = pedirSenhaBackup();
+    if (!senha) { MF.Util.toast('BACKUP CANCELADO', 'erro'); return; }
+    const bytes = await MF.Util.cifrarBackup(dados, senha);
+    blob = new Blob([bytes], { type: 'application/octet-stream' });
+    nomeArquivo = nomeArquivoBackup('financeiro-backup');
+  } else {
+    blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    nomeArquivo = nomeArquivoBackup('json');
+  }
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `backup-meu-financeiro-${new Date().toISOString().slice(0, 10)}.json`;
+  a.href = url; a.download = nomeArquivo;
   a.click();
   URL.revokeObjectURL(url);
   MF.Util.toast('BACKUP BAIXADO ✓');
@@ -1135,19 +1168,29 @@ function restaurarBackup(ev) {
   const arquivo = ev.target.files[0];
   if (!arquivo) return;
   if (!confirm('Isso vai SUBSTITUIR todos os dados atuais pelos dados do backup. Continuar?')) { ev.target.value = ''; return; }
+
+  const cifrado = arquivo.name.toLowerCase().endsWith('.financeiro-backup');
   const leitor = new FileReader();
   leitor.onload = async () => {
     try {
-      const json = JSON.parse(leitor.result);
+      let json;
+      if (cifrado) {
+        const senha = prompt('Digite a senha deste backup:');
+        if (!senha) { ev.target.value = ''; return; }
+        json = await MF.Util.decifrarBackup(new Uint8Array(leitor.result), senha);
+      } else {
+        json = JSON.parse(leitor.result);
+      }
       await MF.importarBackup(json);
       MF.Util.toast('BACKUP RESTAURADO ✓');
       carregarTudo();
     } catch (e) {
       console.error(e);
-      MF.Util.toast('ARQUIVO DE BACKUP INVÁLIDO', 'erro');
+      MF.Util.toast(cifrado ? 'SENHA INCORRETA OU ARQUIVO INVÁLIDO' : 'ARQUIVO DE BACKUP INVÁLIDO', 'erro');
     } finally {
       ev.target.value = '';
     }
   };
-  leitor.readAsText(arquivo);
+  if (cifrado) leitor.readAsArrayBuffer(arquivo);
+  else leitor.readAsText(arquivo);
 }

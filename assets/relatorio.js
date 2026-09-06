@@ -2,8 +2,9 @@
    MEU FINANCEIRO — relatorio.js (Módulo 2: relatório analítico)
    ========================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (document.body.dataset.pagina !== 'relatorio') return;
+  await MF.Auth.exigirPin();
   initRelatorio();
 });
 

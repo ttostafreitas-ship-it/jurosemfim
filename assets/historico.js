@@ -2,8 +2,9 @@
    MEU FINANCEIRO — historico.js (Módulo 3: histórico anual comparativo)
    ========================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (document.body.dataset.pagina !== 'historico') return;
+  await MF.Auth.exigirPin();
   initHistorico();
 });
 
