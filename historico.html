@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meu Financeiro — Histórico Anual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body data-pagina="historico">
+
+<header class="topo">
+  <div class="container topo-linha">
+    <div class="marca"><span class="moeda">R$</span> MEU FINANCEIRO</div>
+    <nav class="abas">
+      <a href="index.html">Lançamentos</a>
+      <a href="relatorio.html">Relatório</a>
+      <a href="historico.html" class="ativa">Histórico</a>
+    </nav>
+    <div class="seletor-periodo">
+      <select id="sel-ano-historico"></select>
+      <button id="btn-registrar-ano" class="btn btn-primario btn-sm">+ REGISTRAR ANO</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Histórico Anual Comparativo</h1>
+
+  <section class="bloco">
+    <div id="indicador-anual" class="indicador-anual"></div>
+    <div class="grafico-caixa"><h3>Entradas vs. Saídas — mês a mês</h3><div class="grafico-canvas-wrap"><canvas id="grafico-historico-linha"></canvas></div></div>
+    <div class="tabela-wrap" style="margin-top:14px">
+      <table class="tabela">
+        <thead><tr><th>Mês</th><th class="col-valor">Entradas</th><th class="col-valor">Saídas</th><th class="col-valor">Saldo</th><th class="col-percent">Variação Saídas</th></tr></thead>
+        <tbody id="tabela-historico-corpo"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="bloco">
+    <h2>Comparativo entre Anos</h2>
+    <div class="grafico-caixa"><div class="grafico-canvas-wrap"><canvas id="grafico-comparativo-anos"></canvas></div></div>
+  </section>
+</main>
+
+<footer class="rodape">Meu Financeiro — todos os dados ficam salvos apenas neste navegador (IndexedDB).</footer>
+
+<div class="modal-fundo" id="modal-registrar-ano">
+  <div class="modal-caixa">
+    <button type="button" class="btn btn-sm btn-ghost fechar" id="btn-fechar-modal">✕</button>
+    <h2>Registrar Ano Anterior</h2>
+    <p class="txt-muted" style="font-size:.82rem">Use isto para lançar resumos de anos passados, mês a mês, sem precisar recriar cada lançamento individual.</p>
+    <form id="form-registrar-ano">
+      <div class="campo-grupo" style="max-width:140px; margin-bottom:10px">
+        <label>Ano</label>
+        <input type="number" id="modal-ano-input" class="campo" required />
+      </div>
+      <div class="tabela-wrap">
+        <table class="tabela">
+          <thead><tr><th>Mês</th><th>Entradas</th><th>Saídas</th><th>Em Aberto</th></tr></thead>
+          <tbody id="modal-meses-corpo"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px; display:flex; gap:8px; justify-content:flex-end">
+        <button type="button" class="btn" id="btn-cancelar-modal">CANCELAR</button>
+        <button type="submit" class="btn btn-primario">SALVAR ANO</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/historico.js"></script>
+</body>
+</html>

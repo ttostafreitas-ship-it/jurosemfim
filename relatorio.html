@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meu Financeiro — Relatório Analítico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body data-pagina="relatorio">
+
+<header class="topo">
+  <div class="container topo-linha">
+    <div class="marca"><span class="moeda">R$</span> MEU FINANCEIRO</div>
+    <nav class="abas">
+      <a href="index.html">Lançamentos</a>
+      <a href="relatorio.html" class="ativa">Relatório</a>
+      <a href="historico.html">Histórico</a>
+    </nav>
+    <div class="seletor-periodo">
+      <select id="rel-sel-mes"></select>
+      <select id="rel-sel-ano"></select>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Relatório Financeiro Analítico</h1>
+
+  <section class="bloco">
+    <h2>A · Painel de Entradas</h2>
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Descrição</th><th>Origem</th><th class="col-valor">Valor</th><th class="col-percent">%</th><th class="col-data">Data</th></tr></thead>
+        <tbody id="tabela-entradas-corpo"></tbody>
+      </table>
+    </div>
+    <h3 style="margin-top:14px">Acumulado por Origem</h3>
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Origem</th><th class="col-valor">Valor</th><th class="col-percent">%</th></tr></thead>
+        <tbody id="tabela-entradas-origem-corpo"></tbody>
+      </table>
+    </div>
+    <div class="grade-graficos duas-colunas" style="margin-top:14px">
+      <div class="grafico-caixa"><h3>Distribuição por Origem</h3><div class="grafico-canvas-wrap"><canvas id="grafico-pizza-origem"></canvas></div></div>
+      <div class="grafico-caixa"><h3>Entradas por Mês</h3><div class="grafico-canvas-wrap"><canvas id="grafico-barras-entradas-mes"></canvas></div></div>
+    </div>
+  </section>
+
+  <section class="bloco">
+    <h2>B · Painel de Saídas</h2>
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Descrição</th><th>Origem</th><th class="col-valor">Valor</th><th>Situação</th><th class="col-percent">%</th><th class="col-data">Data</th></tr></thead>
+        <tbody id="tabela-saidas-corpo"></tbody>
+      </table>
+    </div>
+    <h3 style="margin-top:14px">Acumulado por Categoria</h3>
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Categoria</th><th class="col-valor">Valor</th><th class="col-percent">%</th></tr></thead>
+        <tbody id="tabela-saidas-categoria-corpo"></tbody>
+      </table>
+    </div>
+    <div class="grafico-caixa" style="margin-top:14px">
+      <h3>Saídas Pagas vs. Em Aberto por Mês</h3>
+      <div class="grafico-canvas-wrap"><canvas id="grafico-barras-saidas-status"></canvas></div>
+    </div>
+    <p id="indicador-tendencia" class="negrito" style="margin-top:10px"></p>
+  </section>
+
+  <section class="bloco">
+    <h2>C · Curva de Previsão Inteligente</h2>
+    <p class="txt-muted" style="font-size:.82rem">Janeiro e fevereiro recebem automaticamente um fator sazonal (material escolar, IPTU/IPVA) mesmo sem lançamentos. A área vermelha indica meses em que as saídas projetadas superam as entradas.</p>
+    <div class="grafico-caixa"><div class="grafico-canvas-wrap"><canvas id="grafico-previsao"></canvas></div></div>
+  </section>
+
+  <section class="bloco">
+    <h2>D · Variação Percentual Mensal — <span id="rotulo-ano-variacao"></span></h2>
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Mês</th><th class="col-valor">Entradas</th><th class="col-percent">Var. Entradas</th><th class="col-valor">Saídas</th><th class="col-percent">Var. Saídas</th></tr></thead>
+        <tbody id="tabela-variacao-corpo"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="bloco">
+    <h2>E · Análise Narrativa Automática</h2>
+    <div id="narrativa-container" class="narrativa"></div>
+  </section>
+
+  <section class="bloco">
+    <div class="botoes-exportar">
+      <button id="btn-exportar-xlsx" class="btn btn-primario">EXPORTAR XLSX</button>
+      <button id="btn-exportar-pdf" class="btn btn-primario">EXPORTAR PDF</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="rodape">Meu Financeiro — todos os dados ficam salvos apenas neste navegador (IndexedDB).</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="assets/db.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/relatorio.js"></script>
+</body>
+</html>
