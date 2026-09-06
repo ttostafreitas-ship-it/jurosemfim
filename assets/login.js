@@ -28,12 +28,15 @@ function setMode(nextMode) {
   modeButtons.forEach((button) => button.classList.toggle("active", button.dataset.mode === mode));
   title.textContent = signup ? "Criar cadastro" : "Entrar";
   description.textContent = signup
-    ? "Escolha um nome de usuário e informe um email para recuperação."
+    ? "Escolha um nome de usuário e uma senha (mínimo 8 caracteres). O email é opcional."
     : "Acesse seus lançamentos com seu nome de usuário.";
+  // email só aparece no cadastro, e é opcional (serve só para recuperação futura)
   emailField.classList.toggle("hidden", !signup);
-  email.required = signup;
-  passwordField.classList.toggle("hidden", signup);
-  password.required = !signup;
+  email.required = false;
+  // a senha é sempre pedida, nos dois modos
+  passwordField.classList.remove("hidden");
+  password.required = true;
+  password.autocomplete = signup ? "new-password" : "current-password";
   submit.textContent = signup ? "CADASTRAR" : "ENTRAR";
   forgot.classList.toggle("hidden", signup);
   setStatus("");
@@ -62,9 +65,14 @@ form.addEventListener("submit", async (event) => {
   try {
     const username = document.getElementById("username").value.trim();
     if (mode === "signup") {
-      await MFAuth.signUp(username, email.value.trim());
-      setStatus("Cadastro realizado. Verifique seu email para receber as instruções de acesso.", "ok");
-      form.reset();
+      if (password.value.length < 8) {
+        setStatus("A senha precisa de pelo menos 8 caracteres.", "error");
+        return;
+      }
+      await MFAuth.signUp(username, email.value.trim(), password.value);
+      setStatus("Cadastro criado. Entrando...", "ok");
+      await MFAuth.signIn(username, password.value);
+      window.location.href = "index.html";
     } else {
       await MFAuth.signIn(username, password.value);
       window.location.href = "index.html";

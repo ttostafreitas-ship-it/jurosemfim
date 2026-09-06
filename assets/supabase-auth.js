@@ -33,8 +33,8 @@
     return data;
   }
 
-  async function signUp(username, email) {
-    return invoke("sign_up", { username, email });
+  async function signUp(username, email, password) {
+    return invoke("sign_up", { username, email, password });
   }
 
   async function recover(username) {

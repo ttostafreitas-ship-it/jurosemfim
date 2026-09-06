@@ -156,3 +156,29 @@ begin
   end loop;
 end;
 $$;
+
+-- ============================================================================
+-- Permissoes de TABELA (GRANT) para o role `authenticated`.
+--
+-- RLS restringe linha a linha, mas o GRANT e o pre-requisito de acesso a
+-- TABELA. Sem ele o usuario faz login e mesmo assim toda consulta volta
+-- "permission denied for table ..." (Postgres 42501). O role `anon` fica
+-- de fora de proposito: o login passa pela Edge Function auth-username.
+--
+-- Idempotente: rode quantas vezes quiser.
+-- ============================================================================
+
+grant usage on schema public to anon, authenticated, service_role;
+
+-- service_role (usado pela Edge Function auth-username) precisa de acesso
+-- total: sem isto o login falha em "Usuario ou senha invalidos" porque a
+-- funcao nao consegue ler a tabela profiles.
+grant all on all tables in schema public to service_role;
+
+-- authenticated: o app (db.js) opera como este role; o RLS ja limita linha a linha.
+grant select, insert, update, delete on all tables in schema public to authenticated;
+
+-- Cobre tabelas futuras criadas nesta conexao.
+alter default privileges in schema public grant all on tables to service_role;
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to authenticated;

@@ -56,38 +56,28 @@ serve(async (request) => {
     }
 
     if (action === "sign_up") {
-      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Email inválido." }, 400);
-      if (profile) return json({ error: "Não foi possível criar o cadastro." }, 409);
-      const temporaryPassword = `${crypto.randomUUID().replaceAll("-", "").slice(0, 11)}A`;
-      const created = await admin.auth.admin.createUser({ email, password: temporaryPassword, email_confirm: true, user_metadata: { username } });
-      if (created.error) return json({ error: "Não foi possível criar o cadastro." }, 400);
-      const resendKey = Deno.env.get("RESEND_API_KEY");
-      const sender = Deno.env.get("EMAIL_FROM");
-      if (!resendKey || !sender) {
-        await admin.auth.admin.deleteUser(created.data.user.id);
-        return json({ error: "O envio de email ainda não está configurado." }, 503);
+      // A pessoa escolhe a própria senha no cadastro — nada de email/Resend.
+      if (typeof password !== "string" || password.length < 8) {
+        return json({ error: "A senha precisa de pelo menos 8 caracteres." }, 400);
       }
-      const emailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: sender,
-          to: email,
-          subject: "Sua senha temporária - Meu Financeiro",
-          text: `Seu nome de usuário: ${username}\n\nSenha temporária: ${temporaryPassword}\n\nTroque a senha após entrar.`,
-        }),
+      if (profile) return json({ error: "Este nome de usuário já está em uso." }, 409);
+
+      // Email é opcional (só serviria para recuperação futura). Sem email
+      // informado, cria um endereço interno sintético — o login é sempre
+      // por nome de usuário, esse endereço nunca recebe nada.
+      const informouEmail = typeof email === "string" && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+      const authEmail = informouEmail ? email : `${username.toLowerCase()}@no-reply.meu-financeiro.app`;
+
+      const created = await admin.auth.admin.createUser({
+        email: authEmail,
+        password,
+        email_confirm: true,
+        user_metadata: { username },
       });
-      if (!emailResponse.ok) {
-        // DIAGNÓSTICO: devolve o motivo exato da recusa do Resend (status + corpo).
-        // Depois de identificar a causa, volte esta mensagem para algo genérico.
-        const detalhe = await emailResponse.text().catch(() => "");
-        console.error("Resend recusou o envio:", emailResponse.status, "from=", sender, "to=", email, detalhe);
-        await admin.auth.admin.deleteUser(created.data.user.id);
-        return json({
-          error: `Resend recusou [HTTP ${emailResponse.status}] (from: ${sender}) - ${detalhe.slice(0, 400)}`,
-        }, 502);
+      if (created.error) {
+        return json({ error: "Não foi possível criar o cadastro. Tente outro nome de usuário." }, 400);
       }
-      return json({ ok: true, email_sent: true });
+      return json({ ok: true });
     }
 
     return json({ error: "Ação inválida." }, 400);

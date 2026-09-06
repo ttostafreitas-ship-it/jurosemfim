@@ -10,13 +10,14 @@ Site publicado: <https://ttostafreitas-ship-it.github.io/meu-financeiro/>
 ## Como funciona o acesso
 
 - **Entrar / Cadastrar** é feito em `login.html`, por **nome de usuário +
-  senha**. No cadastro você também informa um **email de recuperação**; a
-  senha inicial é gerada pelo servidor e enviada para esse email (troque-a
-  depois de entrar).
+  senha**. No cadastro a pessoa escolhe a própria senha (mínimo 8
+  caracteres); o **email é opcional** e serviria só para recuperação
+  futura. Não há envio de email no cadastro.
 - A verificação do nome de usuário e o login acontecem numa **Edge
-  Function** do Supabase (`supabase/functions/auth-username`). O email do
-  perfil nunca é devolvido ao navegador — o front-end recebe apenas a
-  sessão do Supabase.
+  Function** do Supabase (`supabase/functions/auth-username`), que faz o
+  mapa nome-de-usuário → conta. O front-end recebe apenas a sessão do
+  Supabase. Quem não informa email recebe um endereço interno sintético
+  (`<usuario>@no-reply.meu-financeiro.app`) que nunca recebe nada.
 - Sem sessão ativa, `index.html`, `relatorio.html` e `historico.html`
   redirecionam automaticamente para `login.html` (`assets/route-guard.js`).
 - O botão **Sair** no menu encerra a sessão.
