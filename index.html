@@ -2,10 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src https://*.supabase.com https://*.supabase.co https://api.resend.com; base-uri 'self'; form-action 'self';" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src https://*.supabase.com https://*.supabase.co; base-uri 'self'; form-action 'self';" />
 <meta name="robots" content="noindex, nofollow" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Meu Financeiro — Lançamentos</title>
+<title>Meu Financeiro â LanÃ§amentos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="assets/style.css" />
@@ -21,9 +21,10 @@
   <div class="container topo-linha">
     <div class="marca"><span class="moeda">R$</span> MEU FINANCEIRO</div>
     <nav class="abas">
-      <a href="index.html" class="ativa">Lançamentos</a>
-      <a href="relatorio.html">Relatório</a>
-      <a href="historico.html">Histórico</a>
+      <a href="index.html" class="ativa">LanÃ§amentos</a>
+      <a href="relatorio.html">RelatÃ³rio</a>
+      <a href="historico.html">HistÃ³rico</a>
+      <a href="#" id="link-sair" class="sair" title="Encerrar sessão">Sair</a>
     </nav>
     <div class="seletor-periodo">
       <select id="sel-mes"></select>
@@ -39,7 +40,7 @@
     <div class="bloco-cabecalho"><h2>ENTRADAS</h2></div>
     <div class="tabela-wrap">
       <table class="tabela">
-        <thead><tr><th>Descrição</th><th>Origem</th><th class="col-valor">Valor</th><th class="col-data">Data</th><th></th></tr></thead>
+        <thead><tr><th>DescriÃ§Ã£o</th><th>Origem</th><th class="col-valor">Valor</th><th class="col-data">Data</th><th></th></tr></thead>
         <tbody id="corpo-entradas"></tbody>
       </table>
     </div>
@@ -47,8 +48,8 @@
 
   <section class="bloco">
     <div class="bloco-cabecalho">
-      <h2>CARTÃO DE CRÉDITO</h2>
-      <button id="fab-novo-cartao" class="btn btn-primario btn-sm">+ NOVO CARTÃO</button>
+      <h2>CARTÃO DE CRÃDITO</h2>
+      <button id="fab-novo-cartao" class="btn btn-primario btn-sm">+ NOVO CARTÃO</button>
     </div>
     <div id="lista-cartoes"></div>
     <div id="resumo-cartoes" class="painel-situacoes"></div>
@@ -56,30 +57,30 @@
 
   <section class="bloco">
     <div class="bloco-cabecalho">
-      <h2>SAÍDAS</h2>
+      <h2>SAÃDAS</h2>
       <button id="btn-ordenar-situacao" class="btn btn-sm btn-ghost"></button>
     </div>
     <div class="tabela-wrap">
       <table class="tabela">
-        <thead><tr><th>Descrição</th><th>Origem</th><th class="col-valor">Valor</th><th class="col-data">Data</th><th style="min-width:230px">Situação</th><th></th></tr></thead>
+        <thead><tr><th>DescriÃ§Ã£o</th><th>Origem</th><th class="col-valor">Valor</th><th class="col-data">Data</th><th style="min-width:230px">SituaÃ§Ã£o</th><th></th></tr></thead>
         <tbody id="corpo-saidas"></tbody>
       </table>
     </div>
     <div id="painel-situacoes" class="painel-situacoes"></div>
     <div class="txt-muted" style="font-size:.78rem; margin-top:8px">
-      Saídas à vista: <span id="resumo-saidas-avista" class="mono"></span> ·
-      Saídas no cartão: <span id="resumo-saidas-cartao" class="mono"></span> ·
-      Total geral de saídas: <span id="resumo-saidas-total" class="mono negrito"></span>
+      SaÃ­das Ã  vista: <span id="resumo-saidas-avista" class="mono"></span> Â·
+      SaÃ­das no cartÃ£o: <span id="resumo-saidas-cartao" class="mono"></span> Â·
+      Total geral de saÃ­das: <span id="resumo-saidas-total" class="mono negrito"></span>
     </div>
   </section>
 
   <section class="bloco">
-    <h3>Totalizadores do Período</h3>
+    <h3>Totalizadores do PerÃ­odo</h3>
     <div class="grade-totais">
       <div class="cartao-total"><div class="rotulo">Total de Entradas</div><div id="tot-entradas" class="valor-grande txt-verde">R$ 0,00</div></div>
-      <div class="cartao-total"><div class="rotulo">Saídas Pagas (Em Dia)</div><div id="tot-saidas-pagas" class="valor-grande">R$ 0,00</div></div>
+      <div class="cartao-total"><div class="rotulo">SaÃ­das Pagas (Em Dia)</div><div id="tot-saidas-pagas" class="valor-grande">R$ 0,00</div></div>
       <div class="cartao-total"><div class="rotulo">Total em Aberto</div><div id="tot-aberto" class="valor-grande txt-vermelho">R$ 0,00</div></div>
-      <div class="cartao-total"><div class="rotulo">Saldo Líquido</div><div id="tot-saldo" class="valor-grande">R$ 0,00</div></div>
+      <div class="cartao-total"><div class="rotulo">Saldo LÃ­quido</div><div id="tot-saldo" class="valor-grande">R$ 0,00</div></div>
     </div>
     <div class="botoes-exportar">
       <button id="btn-exportar-xlsx" class="btn btn-primario">EXPORTAR XLSX</button>
@@ -88,7 +89,7 @@
   </section>
 
   <section class="bloco">
-    <h3>Configurações</h3>
+    <h3>ConfiguraÃ§Ãµes</h3>
     <div class="campo-grupo" style="max-width:420px; margin-bottom:12px">
       <label>URL do logotipo (opcional, usado na capa do PDF)</label>
       <div style="display:flex; gap:6px">
@@ -97,9 +98,9 @@
       </div>
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap">
-      <button id="btn-backup-exportar" class="btn">⬇ BAIXAR BACKUP (.json)</button>
+      <button id="btn-backup-exportar" class="btn">â¬ BAIXAR BACKUP (.json)</button>
       <label class="btn" style="margin:0">
-        ⬆ RESTAURAR BACKUP
+        â¬ RESTAURAR BACKUP
         <input type="file" id="input-backup-importar" accept="application/json,.json,.financeiro-backup" style="display:none" />
       </label>
     </div>
@@ -108,21 +109,21 @@
 </main>
 
 <div class="fabs">
-  <button id="fab-nova-saida" class="fab saida">+ NOVA SAÍDA</button>
+  <button id="fab-nova-saida" class="fab saida">+ NOVA SAÃDA</button>
   <button id="fab-nova-entrada" class="fab entrada">+ NOVA ENTRADA</button>
 </div>
 
-<footer class="rodape">Meu Financeiro — todos os dados ficam salvos apenas neste navegador (IndexedDB).</footer>
+<footer class="rodape">Meu Financeiro — seus dados ficam na sua conta protegida (Supabase, com Row Level Security) e nunca são compartilhados. Faça backup pela tela de Configurações.</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js" integrity="sha384-Xl/CUCfJbzsngMp0CFxkmF0VW/8C160IsGujqeQlIhaGxKz2+JsIGORFqtCPeldF" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-config.js?v=fix-supabase-url"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js" integrity="sha384-CLZeq1dk8+Uzrs7TVvBUdlFoV5F0DMqgRoeHa8g5wJcuPe5SkVfEvdxB0ZuzlnBQ" crossorigin="anonymous"></script>
+<script src="assets/supabase-config.js"></script>
 <script src="assets/route-guard.js"></script>
-<script src="assets/supabase-db.js"></script>
-<script src="assets/supabase-auth.js?v=f480d9b"></script>
+<script src="assets/db.js"></script>
+<script src="assets/supabase-auth.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

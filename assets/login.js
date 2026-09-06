@@ -1,3 +1,8 @@
+// Se já houver sessão ativa, não faz sentido mostrar o login — vai pro app.
+window.supabaseClient?.auth.getSession().then(({ data }) => {
+  if (data && data.session) window.location.replace("index.html");
+});
+
 const form = document.getElementById("auth-form");
 const modeButtons = document.querySelectorAll("[data-mode]");
 const emailField = document.getElementById("email-field");

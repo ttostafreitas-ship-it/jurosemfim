@@ -2,3 +2,12 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# Python (script de geração de ícones)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# arquivos de trabalho locais
+_dev_*.js

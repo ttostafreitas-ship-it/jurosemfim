@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src https://*.supabase.com https://*.supabase.co; base-uri 'self'; form-action 'self';" />
 <meta name="robots" content="noindex, nofollow" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Meu Financeiro — Histórico Anual</title>
+<title>Meu Financeiro â HistÃ³rico Anual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="assets/style.css" />
@@ -21,9 +21,10 @@
   <div class="container topo-linha">
     <div class="marca"><span class="moeda">R$</span> MEU FINANCEIRO</div>
     <nav class="abas">
-      <a href="index.html">Lançamentos</a>
-      <a href="relatorio.html">Relatório</a>
-      <a href="historico.html" class="ativa">Histórico</a>
+      <a href="index.html">LanÃ§amentos</a>
+      <a href="relatorio.html">RelatÃ³rio</a>
+      <a href="historico.html" class="ativa">HistÃ³rico</a>
+      <a href="#" id="link-sair" class="sair" title="Encerrar sessão">Sair</a>
     </nav>
     <div class="seletor-periodo">
       <select id="sel-ano-historico"></select>
@@ -33,14 +34,14 @@
 </header>
 
 <main class="container">
-  <h1>Histórico Anual Comparativo</h1>
+  <h1>HistÃ³rico Anual Comparativo</h1>
 
   <section class="bloco">
     <div id="indicador-anual" class="indicador-anual"></div>
-    <div class="grafico-caixa"><h3>Entradas vs. Saídas — mês a mês</h3><div class="grafico-canvas-wrap"><canvas id="grafico-historico-linha"></canvas></div></div>
+    <div class="grafico-caixa"><h3>Entradas vs. SaÃ­das â mÃªs a mÃªs</h3><div class="grafico-canvas-wrap"><canvas id="grafico-historico-linha"></canvas></div></div>
     <div class="tabela-wrap" style="margin-top:14px">
       <table class="tabela">
-        <thead><tr><th>Mês</th><th class="col-valor">Entradas</th><th class="col-valor">Saídas</th><th class="col-valor">Saldo</th><th class="col-percent">Variação Saídas</th></tr></thead>
+        <thead><tr><th>MÃªs</th><th class="col-valor">Entradas</th><th class="col-valor">SaÃ­das</th><th class="col-valor">Saldo</th><th class="col-percent">VariaÃ§Ã£o SaÃ­das</th></tr></thead>
         <tbody id="tabela-historico-corpo"></tbody>
       </table>
     </div>
@@ -52,13 +53,13 @@
   </section>
 </main>
 
-<footer class="rodape">Meu Financeiro — todos os dados ficam salvos apenas neste navegador (IndexedDB).</footer>
+<footer class="rodape">Meu Financeiro — seus dados ficam na sua conta protegida (Supabase, com Row Level Security) e nunca são compartilhados. Faça backup pela tela de Configurações.</footer>
 
 <div class="modal-fundo" id="modal-registrar-ano">
   <div class="modal-caixa">
-    <button type="button" class="btn btn-sm btn-ghost fechar" id="btn-fechar-modal">✕</button>
+    <button type="button" class="btn btn-sm btn-ghost fechar" id="btn-fechar-modal">â</button>
     <h2>Registrar Ano Anterior</h2>
-    <p class="txt-muted" style="font-size:.82rem">Use isto para lançar resumos de anos passados, mês a mês, sem precisar recriar cada lançamento individual.</p>
+    <p class="txt-muted" style="font-size:.82rem">Use isto para lanÃ§ar resumos de anos passados, mÃªs a mÃªs, sem precisar recriar cada lanÃ§amento individual.</p>
     <form id="form-registrar-ano">
       <div class="campo-grupo" style="max-width:140px; margin-bottom:10px">
         <label>Ano</label>
@@ -66,7 +67,7 @@
       </div>
       <div class="tabela-wrap">
         <table class="tabela">
-          <thead><tr><th>Mês</th><th>Entradas</th><th>Saídas</th><th>Em Aberto</th></tr></thead>
+          <thead><tr><th>MÃªs</th><th>Entradas</th><th>SaÃ­das</th><th>Em Aberto</th></tr></thead>
           <tbody id="modal-meses-corpo"></tbody>
         </table>
       </div>
@@ -79,11 +80,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-config.js?v=fix-supabase-url"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js" integrity="sha384-CLZeq1dk8+Uzrs7TVvBUdlFoV5F0DMqgRoeHa8g5wJcuPe5SkVfEvdxB0ZuzlnBQ" crossorigin="anonymous"></script>
+<script src="assets/supabase-config.js"></script>
 <script src="assets/route-guard.js"></script>
-<script src="assets/supabase-db.js"></script>
-<script src="assets/supabase-auth.js?v=f480d9b"></script>
+<script src="assets/db.js"></script>
+<script src="assets/supabase-auth.js"></script>
 <script src="assets/historico.js"></script>
 </body>
 </html>
