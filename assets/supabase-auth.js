@@ -6,12 +6,12 @@
   }
 
   async function invoke(action, payload) {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/${EDGE_FUNCTION}`, {
+    const response = await fetch(`${window.SUPABASE_URL}/functions/v1/${EDGE_FUNCTION}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        apikey: window.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({ action, ...payload }),
     });
@@ -25,7 +25,7 @@
     if (!result?.session?.access_token || !result?.session?.refresh_token) {
       throw new Error("Sessão de autenticação inválida.");
     }
-    const { data, error } = await supabase.auth.setSession({
+    const { data, error } = await window.supabaseClient.auth.setSession({
       access_token: result.session.access_token,
       refresh_token: result.session.refresh_token,
     });
@@ -46,13 +46,13 @@
   }
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await window.supabaseClient.auth.signOut();
     if (error) throw error;
     window.location.href = "login.html";
   }
 
   async function requireSession() {
-    const { data, error } = await supabase.auth.getSession();
+    const { data, error } = await window.supabaseClient.auth.getSession();
     if (error || !data.session) {
       window.location.href = "login.html";
       return null;
@@ -64,10 +64,10 @@
     if (!/^.{8,}$/.test(nextPassword) || !/[A-Z]/.test(nextPassword) || !/[0-9]/.test(nextPassword)) {
       throw new Error("A nova senha deve ter 8 caracteres, uma maiúscula e um número.");
     }
-    const { error } = await supabase.auth.updateUser({ password: nextPassword });
+    const { error } = await window.supabaseClient.auth.updateUser({ password: nextPassword });
     if (error) throw error;
-    const { data: userData } = await supabase.auth.getUser();
-    return supabase.from("configuracoes").update({ senha_trocada: true }).eq("user_id", userData.user.id);
+    const { data: userData } = await window.supabaseClient.auth.getUser();
+    return window.supabaseClient.from("configuracoes").update({ senha_trocada: true }).eq("user_id", userData.user.id);
   }
 
   window.MFAuth = { signIn, signUp, recover, usernameAvailable, signOut, requireSession, changePassword, message };
