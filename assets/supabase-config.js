@@ -1,5 +1,5 @@
 /* Preencha somente com valores publicos do projeto Supabase. Nunca use service_role aqui. */
-window.SUPABASE_URL = "https://zmfjxroiibmoihryomox.supabase.com";
+window.SUPABASE_URL = "https://zmfjxroiibmoihryomox.supabase.co";
 window.SUPABASE_ANON_KEY = "sb_publishable__mfgCSDV9wGDOXcUYytGAw_vZqD7wGp";
 
 const supabaseLibrary = window.supabaseJs || window.supabase;
