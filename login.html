@@ -12,8 +12,8 @@
   <style>
     body { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
     .auth-card { width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-    .auth-brand { color: var(--blue); font-weight: 700; letter-spacing: .08em; margin-bottom: 8px; }
-    .auth-card h1 { margin-bottom: 8px; }
+    .auth-brand { color: var(--blue); font-weight: 700; letter-spacing: .08em; margin-bottom: 8px; font-size: 1.35rem; }
+    .auth-card h1 { margin-bottom: 8px; font-size: 1.1rem; }
     .auth-tabs { display: flex; gap: 6px; margin: 18px 0; }
     .auth-tabs button { flex: 1; }
     .auth-tabs button.active { background: var(--blue); border-color: var(--blue); color: #fff; }
@@ -29,7 +29,7 @@
 </head>
 <body data-page="login">
   <main class="auth-card">
-    <div class="auth-brand">R$ MEU FINANCEIRO</div>
+    <div class="auth-brand">MEU FINANCEIRO</div>
     <h1 id="auth-title">Entrar</h1>
     <p id="auth-description" class="txt-muted">Acesse seus lançamentos com seu nome de usuário.</p>
     <div class="auth-tabs">
