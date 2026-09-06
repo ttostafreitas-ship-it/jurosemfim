@@ -29,6 +29,11 @@ pergunta se você quer proteger o arquivo com senha:
 O botão **"Restaurar Backup"** detecta sozinho qual dos dois formatos foi
 selecionado (pela extensão do arquivo) e pede a senha quando necessário.
 
+Ao abrir o aplicativo, o usuário precisa informar CPF e senha. No primeiro
+acesso, o CPF é validado e uma conta é criada neste navegador; a senha é
+armazenada somente como hash PBKDF2. O cadastro é local e não sincroniza
+dados entre navegadores ou dispositivos.
+
 ## Segurança
 
 Camadas adicionadas para reduzir a superfície de ataque de um site
@@ -48,18 +53,15 @@ estático publicado publicamente:
   recalcule o hash (ex.: `openssl dgst -sha384 -binary arquivo.js | openssl base64 -A`)
   — um hash desatualizado quebra o carregamento daquela biblioteca.
 - **`noindex, nofollow`**: pede a buscadores para não indexar as páginas.
-- **PIN de tela** (índice, relatório e histórico): pede um PIN de 4 a 6
-  dígitos na primeira vez que abre o app em cada navegador (cria e guarda
-  como hash SHA-256, nunca em texto puro) e depois pede de novo uma vez
-  por sessão do navegador. **Importante — isto não é criptografia**: é só
-  uma trava de tela para evitar que alguém pegue o aparelho e veja os
-  números de relance. Quem abrir o DevTools do navegador (Application →
-  IndexedDB) vê os dados normalmente, com PIN certo, errado ou nenhum —
-  o PIN não impede acesso técnico, só a leitura casual. A proteção real
-  dos dados continua sendo puramente arquitetural (nunca saem do seu
-  navegador) mais, opcionalmente, a senha do backup cifrado acima.
-  "Esqueci o PIN" só oferece limpar os dados do site (apaga tudo) — não
-  existe recuperação, então guarde o PIN em lugar seguro.
+- **Cadastro local** (índice, relatório e histórico): exige CPF e senha uma
+  vez por sessão do navegador. O CPF e o hash PBKDF2 da senha ficam no
+  IndexedDB; a senha nunca é salva em texto puro. **Importante — em um site
+  estático isso não é autenticação de servidor**: alguém com acesso técnico
+  ao DevTools pode alterar os dados locais. Para login real entre dispositivos
+  e proteção contra acesso técnico, é necessário um backend com banco e sessão.
+- **Senha esquecida**: não há recuperação no modo local. Limpar os dados do
+  site apaga o cadastro e também os lançamentos locais; use o backup cifrado
+  para preservar os dados antes de fazer isso.
 - **Backup cifrado opcional**: ver seção "Privacidade dos dados" acima.
 
 ## Estrutura de arquivos
@@ -71,6 +73,9 @@ historico.html     → histórico anual comparativo (Módulo 3)
 manifest.json      → manifesto PWA ("adicionar à tela inicial")
 assets/
   db.js            → IndexedDB + PIN + criptografia de backup + utilitários — compartilhado pelas 3 páginas
+  auth.js          → cadastro e login local por CPF e senha
+scripts/
+  gerar_icones.py  → gera os ícones PNG do PWA usando apenas a biblioteca padrão
   app.js           → lógica de index.html + motor de exportação XLSX/PDF/narrativa (compartilhado com relatorio.html)
   relatorio.js      → lógica específica de relatorio.html
   historico.js      → lógica específica de historico.html

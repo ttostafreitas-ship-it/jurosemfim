@@ -491,6 +491,31 @@ table.tabela tfoot td { font-weight: 700; padding-top: 8px; }
   justify-content: center;
   padding: 20px;
 }
+
+#mf-auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+.mf-auth-box { width: 100%; max-width: 360px; }
+.mf-auth-brand { color: var(--blue); font-size: .78rem; font-weight: 700; letter-spacing: .12em; margin-bottom: 8px; }
+.mf-auth-box h1 { margin-bottom: 6px; }
+.mf-auth-box p { color: var(--text-muted); font-size: .84rem; }
+.mf-auth-field { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; }
+.mf-auth-field span { color: var(--text-muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+.mf-auth-submit { width: 100%; margin-top: 16px; }
+.mf-auth-link { display: block; width: 100%; margin-top: 10px; padding: 4px; background: transparent; border: none; color: var(--blue); font-size: .78rem; text-decoration: underline; }
+.mf-auth-note { text-align: center; margin-top: 20px; font-size: .72rem !important; }
+.mf-auth-error { display: none; color: var(--red); font-size: .8rem; margin-top: 10px; }
+.mf-auth-error.visivel { display: block; }
+.mf-auth-hidden { display: none; }
+
 .mf-pin-caixa { text-align: center; max-width: 300px; width: 100%; }
 .mf-pin-titulo { font-weight: 700; letter-spacing: .08em; color: var(--blue); margin-bottom: 6px; font-size: .95rem; }
 .mf-pin-mensagem { color: var(--text-muted); font-size: .88rem; margin-bottom: 18px; min-height: 20px; }

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.supabase.co; img-src 'self' data: https:; base-uri 'self'; form-action 'self';">
+  <title>Meu Financeiro - Acesso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    body { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+    .auth-card { width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .auth-brand { color: var(--blue); font-weight: 700; letter-spacing: .08em; margin-bottom: 8px; }
+    .auth-card h1 { margin-bottom: 8px; }
+    .auth-tabs { display: flex; gap: 6px; margin: 18px 0; }
+    .auth-tabs button { flex: 1; }
+    .auth-tabs button.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .auth-field { display: grid; gap: 5px; margin-top: 12px; }
+    .auth-field label { color: var(--text-muted); font-size: .72rem; text-transform: uppercase; }
+    .auth-submit { width: 100%; margin-top: 18px; }
+    .auth-link { width: 100%; margin-top: 12px; background: transparent; border: 0; color: var(--blue); text-decoration: underline; }
+    .auth-status { min-height: 22px; margin-top: 12px; font-size: .82rem; }
+    .auth-status.error { color: var(--red); }
+    .auth-status.ok { color: var(--green); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body data-page="login">
+  <main class="auth-card">
+    <div class="auth-brand">R$ MEU FINANCEIRO</div>
+    <h1 id="auth-title">Entrar</h1>
+    <p id="auth-description" class="txt-muted">Acesse seus lançamentos com seu nome de usuário.</p>
+    <div class="auth-tabs">
+      <button type="button" class="active" data-mode="login">ENTRAR</button>
+      <button type="button" data-mode="signup">CADASTRAR</button>
+    </div>
+    <form id="auth-form">
+      <div class="auth-field">
+        <label for="username">Nome de usuário</label>
+        <input id="username" class="campo" autocomplete="username" minlength="3" maxlength="32" required>
+      </div>
+      <div id="email-field" class="auth-field hidden">
+        <label for="email">Email para recuperação</label>
+        <input id="email" class="campo" type="email" autocomplete="email">
+      </div>
+      <div id="password-field" class="auth-field">
+        <label for="password">Senha</label>
+        <input id="password" class="campo" type="password" autocomplete="current-password" minlength="8">
+      </div>
+      <button class="btn btn-primario auth-submit" type="submit">ENTRAR</button>
+    </form>
+    <button type="button" id="forgot" class="auth-link">Esqueci minha senha</button>
+    <div id="auth-status" class="auth-status" role="status"></div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-config.js"></script>
+  <script src="assets/supabase-auth.js"></script>
+  <script>
+    const form = document.getElementById('auth-form');
+    const modeButtons = document.querySelectorAll('[data-mode]');
+    const emailField = document.getElementById('email-field');
+    const passwordField = document.getElementById('password-field');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const submit = document.querySelector('.auth-submit');
+    const forgot = document.getElementById('forgot');
+    const title = document.getElementById('auth-title');
+    const description = document.getElementById('auth-description');
+    const status = document.getElementById('auth-status');
+    let mode = 'login';
+    let usernameTimer;
+
+    function setStatus(text, type = '') { status.textContent = text; status.className = `auth-status ${type}`; }
+    function setMode(nextMode) {
+      mode = nextMode;
+      const signup = mode === 'signup';
+      modeButtons.forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
+      title.textContent = signup ? 'Criar cadastro' : 'Entrar';
+      description.textContent = signup ? 'Escolha um nome de usuário e informe um email para recuperação.' : 'Acesse seus lançamentos com seu nome de usuário.';
+      emailField.classList.toggle('hidden', !signup);
+      email.required = signup;
+      passwordField.classList.toggle('hidden', signup);
+      password.required = !signup;
+      submit.textContent = signup ? 'CADASTRAR' : 'ENTRAR';
+      forgot.classList.toggle('hidden', signup);
+      setStatus('');
+    }
+    modeButtons.forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
+    document.getElementById('username').addEventListener('input', () => {
+      if (mode !== 'signup') return;
+      clearTimeout(usernameTimer);
+      const username = document.getElementById('username').value.trim();
+      if (username.length < 3) return;
+      usernameTimer = setTimeout(async () => {
+        try {
+          const result = await MFAuth.usernameAvailable(username);
+          setStatus(result.available ? 'Nome de usuário disponível.' : 'Nome de usuário indisponível.', result.available ? 'ok' : 'error');
+        } catch (_) { setStatus('Não foi possível verificar o nome agora.', 'error'); }
+      }, 350);
+    });
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      submit.disabled = true;
+      try {
+        const username = document.getElementById('username').value.trim();
+        if (mode === 'signup') {
+          await MFAuth.signUp(username, email.value.trim());
+          setStatus('Cadastro realizado. Verifique seu email para receber as instruções de acesso.', 'ok');
+          form.reset();
+        } else {
+          await MFAuth.signIn(username, password.value);
+          window.location.href = 'index.html';
+        }
+      } catch (error) { setStatus(MFAuth.message(error), 'error'); }
+      finally { submit.disabled = false; }
+    });
+    forgot.addEventListener('click', async () => {
+      const username = document.getElementById('username').value.trim();
+      if (!username) return setStatus('Informe seu nome de usuário.', 'error');
+      try { await MFAuth.recover(username); setStatus('Se o usuário existir, você receberá um email com o link de recuperação.', 'ok'); }
+      catch (error) { setStatus('Se o usuário existir, você receberá um email com o link de recuperação.', 'ok'); }
+    });
+  </script>
+</body>
+</html>
