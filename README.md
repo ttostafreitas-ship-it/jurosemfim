@@ -16,10 +16,51 @@ olhar casual, mas **não é o que garante a privacidade dos seus dados** — o
 que garante é o app nunca enviar nada para fora do seu navegador.
 
 Como os dados moram só no navegador: limpar os dados do site, trocar de
-navegador ou de computador **apaga o histórico local**. Use os botões
-**"Baixar Backup"** (index.html → seção Configurações) regularmente e
-guarde o arquivo `.json` gerado em local seguro (ex.: nuvem pessoal). O
-botão **"Restaurar Backup"** devolve os dados a partir desse arquivo.
+navegador ou de computador **apaga o histórico local**. Use o botão
+**"Baixar Backup"** (index.html → seção Configurações) regularmente. Ele
+pergunta se você quer proteger o arquivo com senha:
+- **Sem senha** → gera `financeiro-backup-AAAA-MM-DD.json`, legível por
+  qualquer editor de texto.
+- **Com senha** → gera `financeiro-backup-AAAA-MM-DD.financeiro-backup`,
+  cifrado com AES-GCM 256 bits (chave derivada da senha via PBKDF2). Sem a
+  senha, o arquivo não pode ser lido por ninguém — **inclusive por você**:
+  não existe recuperação se esquecer a senha, guarde-a em um lugar seguro.
+
+O botão **"Restaurar Backup"** detecta sozinho qual dos dois formatos foi
+selecionado (pela extensão do arquivo) e pede a senha quando necessário.
+
+## Segurança
+
+Camadas adicionadas para reduzir a superfície de ataque de um site
+estático publicado publicamente:
+
+- **CSP** (Content-Security-Policy via `<meta>` nos 3 HTMLs): só permite
+  scripts do próprio site e do jsDelivr, bloqueia qualquer tentativa de
+  `fetch`/`XHR`/`WebSocket` (`connect-src 'none'` — o app não precisa
+  disso, já que tudo é local) e restringe fontes/imagens/estilos às
+  origens realmente usadas.
+- **SRI** (Subresource Integrity) nas 4 bibliotecas carregadas via CDN
+  (Chart.js, SheetJS, jsPDF, jspdf-autotable): cada `<script>` tem um hash
+  `sha384-...` calculado a partir do arquivo real hospedado no jsDelivr.
+  Se o CDN um dia servir um arquivo diferente do hash gravado (comprometido
+  ou trocado), o navegador **recusa executar o script** em vez de rodá-lo
+  silenciosamente. Ao atualizar a versão de alguma biblioteca no futuro,
+  recalcule o hash (ex.: `openssl dgst -sha384 -binary arquivo.js | openssl base64 -A`)
+  — um hash desatualizado quebra o carregamento daquela biblioteca.
+- **`noindex, nofollow`**: pede a buscadores para não indexar as páginas.
+- **PIN de tela** (índice, relatório e histórico): pede um PIN de 4 a 6
+  dígitos na primeira vez que abre o app em cada navegador (cria e guarda
+  como hash SHA-256, nunca em texto puro) e depois pede de novo uma vez
+  por sessão do navegador. **Importante — isto não é criptografia**: é só
+  uma trava de tela para evitar que alguém pegue o aparelho e veja os
+  números de relance. Quem abrir o DevTools do navegador (Application →
+  IndexedDB) vê os dados normalmente, com PIN certo, errado ou nenhum —
+  o PIN não impede acesso técnico, só a leitura casual. A proteção real
+  dos dados continua sendo puramente arquitetural (nunca saem do seu
+  navegador) mais, opcionalmente, a senha do backup cifrado acima.
+  "Esqueci o PIN" só oferece limpar os dados do site (apaga tudo) — não
+  existe recuperação, então guarde o PIN em lugar seguro.
+- **Backup cifrado opcional**: ver seção "Privacidade dos dados" acima.
 
 ## Estrutura de arquivos
 
@@ -27,12 +68,14 @@ botão **"Restaurar Backup"** devolve os dados a partir desse arquivo.
 index.html        → lançamentos: entradas, cartão de crédito, saídas
 relatorio.html     → relatório analítico (Módulo 2)
 historico.html     → histórico anual comparativo (Módulo 3)
+manifest.json      → manifesto PWA ("adicionar à tela inicial")
 assets/
-  db.js            → IndexedDB + utilitários (moeda, data, máscaras) — compartilhado pelas 3 páginas
+  db.js            → IndexedDB + PIN + criptografia de backup + utilitários — compartilhado pelas 3 páginas
   app.js           → lógica de index.html + motor de exportação XLSX/PDF/narrativa (compartilhado com relatorio.html)
   relatorio.js      → lógica específica de relatorio.html
   historico.js      → lógica específica de historico.html
   style.css        → estilo global
+  icon-192.png / icon-512.png → ícones do manifest PWA
 ```
 
 > Nota: `db.js` não estava na lista original de 4 arquivos do pedido —
@@ -119,6 +162,29 @@ dev  → desenvolvimento (código legível/comentado, se você mantiver uma
 Se você optar por publicar o código ofuscado em `main` e manter a versão
 legível em `dev`, lembre-se de sempre desenvolver a partir de `dev` e só
 gerar/copiar a versão ofuscada para `main` na hora de publicar.
+
+`package.json`/`package-lock.json` (ferramentas de build) ficam **só na
+branch `dev`** — a `main` carrega apenas os arquivos que o site precisa
+para rodar. Isso significa que `npm run build` só funciona rodando a
+partir de um checkout que tenha esses arquivos (ou seja, sempre a partir
+de `dev`, nunca direto em `main`). Fluxo completo para publicar uma
+atualização:
+
+```bash
+git checkout dev
+# ... edite os arquivos, teste, commit na dev ...
+git push origin dev
+
+git checkout main
+git merge dev -m "Merge dev para publicar atualização"
+npm run build                                 # reofusca assets/*.js nesta branch (main)
+git rm package.json package-lock.json         # mantém a main só com o necessário
+git add -A
+git commit -m "Build: versão ofuscada"
+git push origin main
+
+git checkout dev                              # volta a desenvolver a partir da dev
+```
 
 ---
 

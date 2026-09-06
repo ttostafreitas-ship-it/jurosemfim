@@ -479,6 +479,50 @@ table.tabela tfoot td { font-weight: 700; padding-top: 8px; }
 }
 .alerta.critico { background: var(--red-bg); border-color: var(--red); color: var(--red); }
 
+/* -------------------------------------------------------------------------- tela de PIN */
+
+#mf-pin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.mf-pin-caixa { text-align: center; max-width: 300px; width: 100%; }
+.mf-pin-titulo { font-weight: 700; letter-spacing: .08em; color: var(--blue); margin-bottom: 6px; font-size: .95rem; }
+.mf-pin-mensagem { color: var(--text-muted); font-size: .88rem; margin-bottom: 18px; min-height: 20px; }
+.mf-pin-circulos { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+.mf-pin-circulo {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--border); background: transparent;
+  transition: background .15s ease, border-color .15s ease;
+}
+.mf-pin-circulo.preenchido { background: var(--blue); border-color: var(--blue); }
+.mf-pin-input-real {
+  display: block; width: 140px; margin: 0 auto 14px;
+  text-align: center; letter-spacing: .4em;
+  font-family: var(--font-mono); font-size: 1.1rem;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 8px 6px;
+}
+.mf-pin-input-real:focus { outline: none; border-color: var(--blue); }
+.mf-pin-confirmar { display: block; width: 100%; margin: 0 auto 14px; }
+.mf-pin-esqueci {
+  background: transparent; border: none; color: var(--text-muted);
+  font-size: .78rem; text-decoration: underline; cursor: pointer; padding: 6px;
+}
+@keyframes mfPinShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+.mf-pin-shake { animation: mfPinShake .35s ease; }
+
 footer.rodape {
   text-align: center;
   color: var(--text-muted);

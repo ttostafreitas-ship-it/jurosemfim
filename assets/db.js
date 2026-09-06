@@ -1,1 +1,690 @@
-const MF=(()=>{let a=null;function t(){return a?Promise.resolve(a):new Promise((t,e)=>{const o=indexedDB.open("MeuFinanceiroDB",1);o.onupgradeneeded=a=>{const t=a.target.result;if(!t.objectStoreNames.contains("lancamentos")){const a=t.createObjectStore("lancamentos",{keyPath:"id",autoIncrement:!0});a.createIndex("ano","ano"),a.createIndex("mes","mes"),a.createIndex("tipo","tipo"),a.createIndex("origem","origem"),a.createIndex("situacao","situacao"),a.createIndex("ano_mes",["ano","mes"]),a.createIndex("ano_mes_tipo",["ano","mes","tipo"]),a.createIndex("cartao_vinculado_id","cartao_vinculado_id")}if(!t.objectStoreNames.contains("historico_anual")){t.createObjectStore("historico_anual",{keyPath:["ano","mes"]}).createIndex("ano","ano")}if(t.objectStoreNames.contains("configuracoes")||t.createObjectStore("configuracoes",{keyPath:"chave"}),!t.objectStoreNames.contains("cartoes")){t.createObjectStore("cartoes",{keyPath:"id",autoIncrement:!0}).createIndex("ano_mes",["ano","mes"])}if(!t.objectStoreNames.contains("gastos_cartao")){const a=t.createObjectStore("gastos_cartao",{keyPath:"id",autoIncrement:!0});a.createIndex("cartao_id","cartao_id"),a.createIndex("ano_mes",["ano","mes"])}},o.onsuccess=e=>{a=e.target.result,t(a)},o.onerror=a=>e(a.target.error)})}function e(a){return new Promise((t,e)=>{a.onsuccess=()=>t(a.result),a.onerror=()=>e(a.error)})}async function o(a,e="readonly"){return(await t()).transaction(a,e).objectStore(a)}async function r(a,t,r){return e((await o(a)).index(t).getAll(r))}async function n(a){return e((await o(a)).getAll())}const c=["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"],s=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"],i={formatMoeda:a=>(Number(a)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"}),formatNumero:(a,t=2)=>(Number(a)||0).toLocaleString("pt-BR",{minimumFractionDigits:t,maximumFractionDigits:t}),formatPercent:(a,t=1)=>(Number(a)||0).toLocaleString("pt-BR",{minimumFractionDigits:t,maximumFractionDigits:t})+"%",parseDecimalBR(a){if("number"==typeof a)return a;if(!a)return 0;const t=String(a).trim().replace(/\.(?=\d{3}(\D|$))/g,"").replace(",","."),e=parseFloat(t);return isNaN(e)?0:e},nomeMes(a,t=!1){const e=Math.max(1,Math.min(12,Number(a)))-1;return t?s[e]:c[e]},hojeBR(){const a=new Date;return`${String(a.getDate()).padStart(2,"0")}/${String(a.getMonth()+1).padStart(2,"0")}/${String(a.getFullYear()).slice(2)}`},mesAnoAtual(){const a=new Date;return{mes:a.getMonth()+1,ano:a.getFullYear()}},parseDataBR(a){if(!a||"string"!=typeof a)return null;const t=a.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);if(!t)return null;const e=parseInt(t[1],10),o=parseInt(t[2],10);let r=parseInt(t[3],10);return r<100&&(r+=2e3),o<1||o>12||e<1||e>31?null:{dia:e,mes:o,ano:r}},aplicarMascaraData(a){const t=a.replace(/\D/g,"").slice(0,6);return t.length>4?t.slice(0,2)+"/"+t.slice(2,4)+"/"+t.slice(4):t.length>2?t.slice(0,2)+"/"+t.slice(2):t},ligarMascaraMoeda(a){a.dataset.cents||(a.dataset.cents="0");const t=()=>{const t=parseInt(a.dataset.cents||"0",10);a.value=0===t?"":i.formatMoeda(t/100),a.dispatchEvent(new Event("input",{bubbles:!0}))};a.addEventListener("keydown",e=>{if(/^[0-9]$/.test(e.key)){e.preventDefault();let o=(a.dataset.cents||"0")+e.key;if(o=o.replace(/^0+(?=\d)/,""),o.length>13)return;a.dataset.cents=o,t()}else if("Backspace"===e.key){e.preventDefault();const o=a.dataset.cents||"0";a.dataset.cents=o.length>1?o.slice(0,-1):"0",t()}else["Tab","Enter","ArrowLeft","ArrowRight","Shift"].includes(e.key)||e.preventDefault()}),t()},valorMascaraMoeda:a=>parseInt(a.dataset.cents||"0",10)/100,definirValorMascaraMoeda(a,t){const e=Math.round(100*(Number(t)||0));a.dataset.cents=String(e),a.value=0===e?"":i.formatMoeda(e/100)},ligarMaiusculas(a){a.addEventListener("input",()=>{const t=a.selectionStart;a.value=a.value.toUpperCase(),a.setSelectionRange(t,t)})},ligarMascaraData(a){a.addEventListener("input",()=>{a.value=i.aplicarMascaraData(a.value)})},ligarNavegacaoEnter(a,t){const e=Array.from(a.querySelectorAll(".campo-nav"));e.forEach((a,o)=>{a.addEventListener("keydown",a=>{"Enter"===a.key&&(a.preventDefault(),o<e.length-1?(e[o+1].focus(),e[o+1].select&&e[o+1].select()):t())})})},escapeHtml(a){const t=document.createElement("div");return t.textContent=String(null==a?"":a),t.innerHTML},toast(a="SALVO ✓",t="ok"){let e=document.getElementById("mf-toast");e||(e=document.createElement("div"),e.id="mf-toast",document.body.appendChild(e)),e.textContent=a,e.className="mf-toast mf-toast--"+t+" mf-toast--visivel",clearTimeout(e._timer),e._timer=setTimeout(()=>e.classList.remove("mf-toast--visivel"),2e3)}};async function l(a){const t=await o("lancamentos","readwrite"),r=Object.assign({criado_em:(new Date).toISOString()},a);return e(t.put(r))}async function u(a){return e((await o("lancamentos")).get(a))}async function d(a,t){const e=await r("lancamentos","ano_mes",[t,a]);return{entradas:e.filter(a=>"entrada"===a.tipo).sort((a,t)=>(a.criado_em||"").localeCompare(t.criado_em||"")),saidas:e.filter(a=>"saida"===a.tipo).sort((a,t)=>(a.criado_em||"").localeCompare(t.criado_em||""))}}async function m(a,t){return(await n("cartoes")).filter(e=>e.mes===a&&e.ano===t).sort((a,t)=>(a.nome||"").localeCompare(t.nome||""))}async function f(a,t,e){return(await r("gastos_cartao","cartao_id",a)).filter(a=>a.mes===t&&a.ano===e).sort((a,t)=>(a.id||0)-(t.id||0))}return{abrirBanco:t,Util:i,salvarLancamento:l,excluirLancamento:async function(a){return e((await o("lancamentos","readwrite")).delete(a))},buscarLancamentoPorId:u,buscarPorMesAno:d,buscarSaidasPorSituacao:async function(a,t,e){const{saidas:o}=await d(t,e);return o.filter(t=>t.situacao===a)},buscarAnosDisponiveis:async function(){const[a,t]=await Promise.all([n("lancamentos"),n("historico_anual")]),e=new Set;return a.forEach(a=>e.add(a.ano)),t.forEach(a=>e.add(a.ano)),e.add((new Date).getFullYear()),Array.from(e).sort((a,t)=>t-a)},salvarHistoricoAnualManual:async function(a){return e((await o("historico_anual","readwrite")).put(a))},buscarHistoricoAnual:async function(a){const[t,e]=await Promise.all([r("lancamentos","ano",a),r("historico_anual","ano",a)]),o=[];for(let r=1;r<=12;r++){const n=t.filter(a=>a.mes===r),c=n.length>0;let s=0,i=0,l=0;if(c)n.forEach(a=>{const t=(null!=a.valor_pago?a.valor_pago:a.valor)||0;"entrada"===a.tipo?s+=a.valor||0:"atrasada"===a.situacao||"urgente"===a.situacao?l+=t:i+=t});else{const a=e.find(a=>a.mes===r);a&&(s=a.total_entradas||0,i=a.total_saidas||0,l=a.total_aberto||0)}o.push({ano:a,mes:r,total_entradas:s,total_saidas:i,total_aberto:l,saldo:s-i,origem:c?"lancamentos":e.find(a=>a.mes===r)?"manual":"vazio"})}return o},salvarConfiguracao:async function(a,t){return e((await o("configuracoes","readwrite")).put({chave:a,valor:t}))},buscarConfiguracao:async function(a,t=null){const r=await o("configuracoes"),n=await e(r.get(a));return n?n.valor:t},salvarCartao:async function(a){return e((await o("cartoes","readwrite")).put(a))},excluirCartao:async function(a){const t=await r("gastos_cartao","cartao_id",a),n=await o("gastos_cartao","readwrite");await Promise.all(t.map(a=>e(n.delete(a.id))));const c=await r("lancamentos","cartao_vinculado_id",a),s=await o("lancamentos","readwrite");return await Promise.all(c.map(a=>(a.cartao_vinculado_id=null,"cartao"===a.situacao&&(a.situacao="emdia"),e(s.put(a))))),e((await o("cartoes","readwrite")).delete(a))},buscarCartaoPorId:async function(a){return e((await o("cartoes")).get(a))},buscarCartoes:m,salvarGastoCartao:async function(a){return e((await o("gastos_cartao","readwrite")).put(a))},excluirGastoCartao:async function(a){return e((await o("gastos_cartao","readwrite")).delete(a))},buscarGastosPorCartao:f,calcularJurosTotais:async function(a,t){const e=await m(a,t);let o=0,r=0,n=0,c=0;for(const s of e){(await f(s.id,a,t)).forEach(a=>{n+=a.valor_total||0,"juros"===a.tipo?o+=a.valor_juros||0:r+=a.valor_total||0}),c+=s.fatura_atual||0}const{saidas:s}=await d(a,t);s.filter(a=>"cartao"===a.situacao).forEach(a=>{n+=(null!=a.valor_pago?a.valor_pago:a.valor)||0});const i=(await d(a,t)).entradas.reduce((a,t)=>a+(t.valor||0),0);return{totalJuros:o,totalSemJuros:r,totalGastosCartao:n,faturaTotal:c,percentualFatura:c>0?o/c*100:0,percentualRenda:i>0?o/i*100:0}},vincularSaidaAoCartao:async function(a,t,e){const o=await u(a);if(!o)throw new Error("Lançamento não encontrado: "+a);return o.situacao="cartao",o.cartao_vinculado_id=t,o.valor_pago=e,l(o)},exportarTudo:async function(){const[a,t,e,o,r]=await Promise.all([n("lancamentos"),n("historico_anual"),n("configuracoes"),n("cartoes"),n("gastos_cartao")]);return{versao:1,exportado_em:(new Date).toISOString(),lancamentos:a,historico_anual:t,configuracoes:e,cartoes:o,gastos_cartao:r}},importarBackup:async function(a){if(!a||"object"!=typeof a)throw new Error("Backup inválido");const e=["lancamentos","historico_anual","configuracoes","cartoes","gastos_cartao"],o=(await t()).transaction(e,"readwrite");for(const t of e){const e=o.objectStore(t);e.clear(),(a[t]||[]).forEach(a=>e.put(a))}return new Promise((a,t)=>{o.oncomplete=()=>a(!0),o.onerror=()=>t(o.error)})}}})();
+/* ==========================================================================
+   MEU FINANCEIRO — camada de dados (IndexedDB) + utilitários compartilhados
+   Carregado por index.html, relatorio.html e historico.html antes dos
+   scripts específicos de cada página (app.js / relatorio.js / historico.js).
+   ========================================================================== */
+
+const MF = (() => {
+
+  const DB_NAME = 'MeuFinanceiroDB';
+  const DB_VERSION = 1;
+  let dbInstance = null;
+
+  function abrirBanco() {
+    if (dbInstance) return Promise.resolve(dbInstance);
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+      req.onupgradeneeded = (ev) => {
+        const db = ev.target.result;
+
+        if (!db.objectStoreNames.contains('lancamentos')) {
+          const s = db.createObjectStore('lancamentos', { keyPath: 'id', autoIncrement: true });
+          s.createIndex('ano', 'ano');
+          s.createIndex('mes', 'mes');
+          s.createIndex('tipo', 'tipo');
+          s.createIndex('origem', 'origem');
+          s.createIndex('situacao', 'situacao');
+          s.createIndex('ano_mes', ['ano', 'mes']);
+          s.createIndex('ano_mes_tipo', ['ano', 'mes', 'tipo']);
+          s.createIndex('cartao_vinculado_id', 'cartao_vinculado_id');
+        }
+
+        if (!db.objectStoreNames.contains('historico_anual')) {
+          const s = db.createObjectStore('historico_anual', { keyPath: ['ano', 'mes'] });
+          s.createIndex('ano', 'ano');
+        }
+
+        if (!db.objectStoreNames.contains('configuracoes')) {
+          db.createObjectStore('configuracoes', { keyPath: 'chave' });
+        }
+
+        if (!db.objectStoreNames.contains('cartoes')) {
+          const s = db.createObjectStore('cartoes', { keyPath: 'id', autoIncrement: true });
+          s.createIndex('ano_mes', ['ano', 'mes']);
+        }
+
+        if (!db.objectStoreNames.contains('gastos_cartao')) {
+          const s = db.createObjectStore('gastos_cartao', { keyPath: 'id', autoIncrement: true });
+          s.createIndex('cartao_id', 'cartao_id');
+          s.createIndex('ano_mes', ['ano', 'mes']);
+        }
+      };
+
+      req.onsuccess = (ev) => { dbInstance = ev.target.result; resolve(dbInstance); };
+      req.onerror = (ev) => {
+        console.error('Erro ao abrir IndexedDB:', ev.target.error);
+        Util.toast('Erro ao salvar dados. Verifique o armazenamento do navegador.', 'erro');
+        reject(ev.target.error);
+      };
+    });
+  }
+
+  // Ponto único por onde toda operação de leitura/escrita do IndexedDB passa —
+  // por isso o aviso de erro fica centralizado aqui em vez de repetido em
+  // cada uma das funções de acesso a dados.
+  function promisify(req) {
+    return new Promise((resolve, reject) => {
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => {
+        console.error('Erro no IndexedDB:', req.error);
+        Util.toast('Erro ao salvar dados. Verifique o armazenamento do navegador.', 'erro');
+        reject(req.error);
+      };
+    });
+  }
+
+  async function getStore(nome, modo = 'readonly') {
+    const db = await abrirBanco();
+    const tx = db.transaction(nome, modo);
+    return tx.objectStore(nome);
+  }
+
+  async function getAllByIndex(storeNome, indexNome, valorChave) {
+    const store = await getStore(storeNome);
+    const idx = store.index(indexNome);
+    return promisify(idx.getAll(valorChave));
+  }
+
+  async function getAll(storeNome) {
+    const store = await getStore(storeNome);
+    return promisify(store.getAll());
+  }
+
+  // ------------------------------------------------------------------------
+  // Utilitários de formatação / máscara (compartilhados por todas as páginas)
+  // ------------------------------------------------------------------------
+
+  const NOMES_MESES = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO',
+    'JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+  const NOMES_MESES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
+  const Util = {
+    formatMoeda(valor) {
+      const n = Number(valor) || 0;
+      return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    },
+
+    formatNumero(valor, casas = 2) {
+      const n = Number(valor) || 0;
+      return n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+    },
+
+    formatPercent(valor, casas = 1) {
+      const n = Number(valor) || 0;
+      return n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }) + '%';
+    },
+
+    // "3,5" -> 3.5 / "1.234,56" -> 1234.56
+    parseDecimalBR(str) {
+      if (typeof str === 'number') return str;
+      if (!str) return 0;
+      const limpo = String(str).trim().replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
+      const n = parseFloat(limpo);
+      return isNaN(n) ? 0 : n;
+    },
+
+    nomeMes(mesNum, abreviado = false) {
+      const i = Math.max(1, Math.min(12, Number(mesNum))) - 1;
+      return abreviado ? NOMES_MESES_ABREV[i] : NOMES_MESES[i];
+    },
+
+    hojeBR() {
+      const d = new Date();
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const aa = String(d.getFullYear()).slice(2);
+      return `${dd}/${mm}/${aa}`;
+    },
+
+    mesAnoAtual() {
+      const d = new Date();
+      return { mes: d.getMonth() + 1, ano: d.getFullYear() };
+    },
+
+    // "DD/MM/AA" -> { dia, mes, ano (4 dígitos) }
+    parseDataBR(dataStr) {
+      if (!dataStr || typeof dataStr !== 'string') return null;
+      const m = dataStr.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+      if (!m) return null;
+      const dia = parseInt(m[1], 10);
+      const mes = parseInt(m[2], 10);
+      let ano = parseInt(m[3], 10);
+      if (ano < 100) ano += 2000;
+      if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
+      return { dia, mes, ano };
+    },
+
+    // aplica máscara DD/MM/AA progressivamente enquanto o usuário digita
+    aplicarMascaraData(valorAtual) {
+      const digitos = valorAtual.replace(/\D/g, '').slice(0, 6);
+      if (digitos.length > 4) return digitos.slice(0, 2) + '/' + digitos.slice(2, 4) + '/' + digitos.slice(4);
+      if (digitos.length > 2) return digitos.slice(0, 2) + '/' + digitos.slice(2);
+      return digitos;
+    },
+
+    // liga máscara monetária estilo "caixa registradora" (digita da direita pra esquerda)
+    ligarMascaraMoeda(input) {
+      if (!input.dataset.cents) input.dataset.cents = '0';
+      const redraw = () => {
+        const cents = parseInt(input.dataset.cents || '0', 10);
+        input.value = cents === 0 ? '' : Util.formatMoeda(cents / 100);
+        // input.value é setado via JS (não digitação nativa, pois o keydown
+        // usa preventDefault) — sem isto, quem escuta "input" neste campo
+        // (ex.: cálculo de juros ao vivo) nunca seria notificado.
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      input.addEventListener('keydown', (e) => {
+        if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          let next = (input.dataset.cents || '0') + e.key;
+          next = next.replace(/^0+(?=\d)/, '');
+          if (next.length > 13) return;
+          input.dataset.cents = next;
+          redraw();
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          const atual = input.dataset.cents || '0';
+          input.dataset.cents = atual.length > 1 ? atual.slice(0, -1) : '0';
+          redraw();
+        } else if (['Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Shift'].includes(e.key)) {
+          // permite navegação normal
+        } else {
+          e.preventDefault();
+        }
+      });
+      redraw();
+    },
+
+    valorMascaraMoeda(input) {
+      return (parseInt(input.dataset.cents || '0', 10)) / 100;
+    },
+
+    definirValorMascaraMoeda(input, valor) {
+      const cents = Math.round((Number(valor) || 0) * 100);
+      input.dataset.cents = String(cents);
+      input.value = cents === 0 ? '' : Util.formatMoeda(cents / 100);
+    },
+
+    ligarMaiusculas(input) {
+      input.addEventListener('input', () => {
+        const pos = input.selectionStart;
+        input.value = input.value.toUpperCase();
+        input.setSelectionRange(pos, pos);
+      });
+    },
+
+    ligarMascaraData(input) {
+      input.addEventListener('input', () => {
+        input.value = Util.aplicarMascaraData(input.value);
+      });
+    },
+
+    // liga Enter para navegar entre campos de um container; ao dar Enter no
+    // último campo, chama aoFinalizar()
+    ligarNavegacaoEnter(container, aoFinalizar) {
+      const campos = Array.from(container.querySelectorAll('.campo-nav'));
+      campos.forEach((campo, i) => {
+        campo.addEventListener('keydown', (e) => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          if (i < campos.length - 1) {
+            campos[i + 1].focus();
+            if (campos[i + 1].select) campos[i + 1].select();
+          } else {
+            aoFinalizar();
+          }
+        });
+      });
+    },
+
+    escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = String(str == null ? '' : str);
+      return d.innerHTML;
+    },
+
+    toast(msg = 'SALVO ✓', tipo = 'ok') {
+      let el = document.getElementById('mf-toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'mf-toast';
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.className = 'mf-toast mf-toast--' + tipo + ' mf-toast--visivel';
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => el.classList.remove('mf-toast--visivel'), 2000);
+    }
+  };
+
+  // ------------------------------------------------------------------------
+  // LANÇAMENTOS (entradas / saídas)
+  // ------------------------------------------------------------------------
+
+  async function salvarLancamento(obj) {
+    const store = await getStore('lancamentos', 'readwrite');
+    const registro = Object.assign({ criado_em: new Date().toISOString() }, obj);
+    return promisify(store.put(registro));
+  }
+
+  async function excluirLancamento(id) {
+    const store = await getStore('lancamentos', 'readwrite');
+    return promisify(store.delete(id));
+  }
+
+  async function buscarLancamentoPorId(id) {
+    const store = await getStore('lancamentos');
+    return promisify(store.get(id));
+  }
+
+  async function buscarPorMesAno(mes, ano) {
+    const todos = await getAllByIndex('lancamentos', 'ano_mes', [ano, mes]);
+    return {
+      entradas: todos.filter(l => l.tipo === 'entrada').sort((a, b) => (a.criado_em || '').localeCompare(b.criado_em || '')),
+      saidas: todos.filter(l => l.tipo === 'saida').sort((a, b) => (a.criado_em || '').localeCompare(b.criado_em || ''))
+    };
+  }
+
+  async function buscarSaidasPorSituacao(situacao, mes, ano) {
+    const { saidas } = await buscarPorMesAno(mes, ano);
+    return saidas.filter(s => s.situacao === situacao);
+  }
+
+  async function buscarAnosDisponiveis() {
+    const [lancs, hist] = await Promise.all([getAll('lancamentos'), getAll('historico_anual')]);
+    const anos = new Set();
+    lancs.forEach(l => anos.add(l.ano));
+    hist.forEach(h => anos.add(h.ano));
+    anos.add(new Date().getFullYear());
+    return Array.from(anos).sort((a, b) => b - a);
+  }
+
+  // ------------------------------------------------------------------------
+  // HISTÓRICO ANUAL — agrega lançamentos reais e complementa com registros
+  // manuais (para anos/meses sem lançamentos detalhados)
+  // ------------------------------------------------------------------------
+
+  async function salvarHistoricoAnualManual(obj) {
+    const store = await getStore('historico_anual', 'readwrite');
+    return promisify(store.put(obj));
+  }
+
+  async function buscarHistoricoAnual(ano) {
+    const [lancs, manuais] = await Promise.all([
+      getAllByIndex('lancamentos', 'ano', ano),
+      getAllByIndex('historico_anual', 'ano', ano)
+    ]);
+
+    const meses = [];
+    for (let mes = 1; mes <= 12; mes++) {
+      const doMes = lancs.filter(l => l.mes === mes);
+      const temLancamentos = doMes.length > 0;
+      let total_entradas = 0, total_saidas = 0, total_aberto = 0;
+
+      if (temLancamentos) {
+        doMes.forEach(l => {
+          const valorEfetivo = (l.valor_pago != null ? l.valor_pago : l.valor) || 0;
+          if (l.tipo === 'entrada') {
+            total_entradas += l.valor || 0;
+          } else {
+            if (l.situacao === 'atrasada' || l.situacao === 'urgente') total_aberto += valorEfetivo;
+            else total_saidas += valorEfetivo;
+          }
+        });
+      } else {
+        const manual = manuais.find(m => m.mes === mes);
+        if (manual) {
+          total_entradas = manual.total_entradas || 0;
+          total_saidas = manual.total_saidas || 0;
+          total_aberto = manual.total_aberto || 0;
+        }
+      }
+
+      meses.push({
+        ano, mes,
+        total_entradas, total_saidas, total_aberto,
+        saldo: total_entradas - total_saidas,
+        origem: temLancamentos ? 'lancamentos' : (manuais.find(m => m.mes === mes) ? 'manual' : 'vazio')
+      });
+    }
+    return meses;
+  }
+
+  // ------------------------------------------------------------------------
+  // CONFIGURAÇÕES
+  // ------------------------------------------------------------------------
+
+  async function salvarConfiguracao(chave, valor) {
+    const store = await getStore('configuracoes', 'readwrite');
+    return promisify(store.put({ chave, valor }));
+  }
+
+  async function buscarConfiguracao(chave, padrao = null) {
+    const store = await getStore('configuracoes');
+    const r = await promisify(store.get(chave));
+    return r ? r.valor : padrao;
+  }
+
+  // ------------------------------------------------------------------------
+  // CARTÕES DE CRÉDITO
+  // ------------------------------------------------------------------------
+
+  async function salvarCartao(obj) {
+    const store = await getStore('cartoes', 'readwrite');
+    return promisify(store.put(obj));
+  }
+
+  async function excluirCartao(id) {
+    const gastos = await getAllByIndex('gastos_cartao', 'cartao_id', id);
+    const storeGastos = await getStore('gastos_cartao', 'readwrite');
+    await Promise.all(gastos.map(g => promisify(storeGastos.delete(g.id))));
+
+    const lancs = await getAllByIndex('lancamentos', 'cartao_vinculado_id', id);
+    const storeLanc = await getStore('lancamentos', 'readwrite');
+    await Promise.all(lancs.map(l => {
+      l.cartao_vinculado_id = null;
+      if (l.situacao === 'cartao') l.situacao = 'emdia';
+      return promisify(storeLanc.put(l));
+    }));
+
+    const store = await getStore('cartoes', 'readwrite');
+    return promisify(store.delete(id));
+  }
+
+  async function buscarCartaoPorId(id) {
+    const store = await getStore('cartoes');
+    return promisify(store.get(id));
+  }
+
+  async function buscarCartoes(mes, ano) {
+    const todos = await getAll('cartoes');
+    return todos.filter(c => c.mes === mes && c.ano === ano)
+      .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+  }
+
+  // ------------------------------------------------------------------------
+  // GASTOS DO CARTÃO
+  // ------------------------------------------------------------------------
+
+  async function salvarGastoCartao(obj) {
+    const store = await getStore('gastos_cartao', 'readwrite');
+    return promisify(store.put(obj));
+  }
+
+  async function excluirGastoCartao(id) {
+    const store = await getStore('gastos_cartao', 'readwrite');
+    return promisify(store.delete(id));
+  }
+
+  async function buscarGastosPorCartao(cartao_id, mes, ano) {
+    const todos = await getAllByIndex('gastos_cartao', 'cartao_id', cartao_id);
+    return todos.filter(g => g.mes === mes && g.ano === ano)
+      .sort((a, b) => (a.id || 0) - (b.id || 0));
+  }
+
+  async function calcularJurosTotais(mes, ano) {
+    const cartoes = await buscarCartoes(mes, ano);
+    let totalJuros = 0, totalSemJuros = 0, totalGastosCartao = 0, faturaTotal = 0;
+
+    for (const cartao of cartoes) {
+      const gastos = await buscarGastosPorCartao(cartao.id, mes, ano);
+      gastos.forEach(g => {
+        totalGastosCartao += g.valor_total || 0;
+        if (g.tipo === 'juros') totalJuros += g.valor_juros || 0;
+        else totalSemJuros += g.valor_total || 0;
+      });
+      faturaTotal += cartao.fatura_atual || 0;
+    }
+    // saídas de lançamentos pagas com cartão também contam pro total geral em cartões
+    const { saidas } = await buscarPorMesAno(mes, ano);
+    const saidasCartao = saidas.filter(s => s.situacao === 'cartao');
+    saidasCartao.forEach(s => { totalGastosCartao += (s.valor_pago != null ? s.valor_pago : s.valor) || 0; });
+
+    const entradas = (await buscarPorMesAno(mes, ano)).entradas.reduce((s, e) => s + (e.valor || 0), 0);
+    const percentualFatura = faturaTotal > 0 ? (totalJuros / faturaTotal) * 100 : 0;
+    const percentualRenda = entradas > 0 ? (totalJuros / entradas) * 100 : 0;
+
+    return { totalJuros, totalSemJuros, totalGastosCartao, faturaTotal, percentualFatura, percentualRenda };
+  }
+
+  async function vincularSaidaAoCartao(saida_id, cartao_id, valor) {
+    const lanc = await buscarLancamentoPorId(saida_id);
+    if (!lanc) throw new Error('Lançamento não encontrado: ' + saida_id);
+    lanc.situacao = 'cartao';
+    lanc.cartao_vinculado_id = cartao_id;
+    lanc.valor_pago = valor;
+    return salvarLancamento(lanc);
+  }
+
+  // ------------------------------------------------------------------------
+  // BACKUP
+  // ------------------------------------------------------------------------
+
+  async function exportarTudo() {
+    const [lancamentos, historico_anual, configuracoes, cartoes, gastos_cartao] = await Promise.all([
+      getAll('lancamentos'), getAll('historico_anual'), getAll('configuracoes'),
+      getAll('cartoes'), getAll('gastos_cartao')
+    ]);
+    return {
+      versao: DB_VERSION,
+      exportado_em: new Date().toISOString(),
+      lancamentos, historico_anual, configuracoes, cartoes, gastos_cartao
+    };
+  }
+
+  async function importarBackup(json) {
+    if (!json || typeof json !== 'object') throw new Error('Backup inválido');
+    const stores = ['lancamentos', 'historico_anual', 'configuracoes', 'cartoes', 'gastos_cartao'];
+    const db = await abrirBanco();
+    const tx = db.transaction(stores, 'readwrite');
+    for (const nome of stores) {
+      const store = tx.objectStore(nome);
+      store.clear();
+      (json[nome] || []).forEach(item => store.put(item));
+    }
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => {
+        console.error('Erro ao importar backup:', tx.error);
+        Util.toast('Erro ao salvar dados. Verifique o armazenamento do navegador.', 'erro');
+        reject(tx.error);
+      };
+    });
+  }
+
+  // ------------------------------------------------------------------------
+  // CRIPTOGRAFIA DE BACKUP (AES-GCM 256 bits, chave derivada da senha via
+  // PBKDF2) — usada pela exportação/restauração opcionalmente cifrada.
+  // ------------------------------------------------------------------------
+
+  async function derivarChaveBackup(senha, salt) {
+    const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' },
+      material,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async function cifrarBackup(objeto, senha) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const chave = await derivarChaveBackup(senha, salt);
+    const dados = new TextEncoder().encode(JSON.stringify(objeto));
+    const cifrado = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, chave, dados));
+    // formato binário simples: [salt 16 bytes][iv 12 bytes][ciphertext...]
+    const saida = new Uint8Array(salt.length + iv.length + cifrado.length);
+    saida.set(salt, 0);
+    saida.set(iv, salt.length);
+    saida.set(cifrado, salt.length + iv.length);
+    return saida;
+  }
+
+  async function decifrarBackup(bytes, senha) {
+    const dadosBytes = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    const salt = dadosBytes.slice(0, 16);
+    const iv = dadosBytes.slice(16, 28);
+    const cifrado = dadosBytes.slice(28);
+    const chave = await derivarChaveBackup(senha, salt);
+    const decifrado = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, chave, cifrado);
+    return JSON.parse(new TextDecoder().decode(decifrado));
+  }
+
+  Util.cifrarBackup = cifrarBackup;
+  Util.decifrarBackup = decifrarBackup;
+
+  // ------------------------------------------------------------------------
+  // PROTEÇÃO POR PIN — trava de tela local. IMPORTANTE: isto NÃO criptografa
+  // os dados nem é "segurança" no sentido forte — é só uma barreira de UI
+  // para impedir uma olhada casual de quem pega o aparelho. Qualquer pessoa
+  // que abra o DevTools (Application > IndexedDB) vê os dados normalmente,
+  // com ou sem PIN certo. Pedido de novo uma vez por sessão do navegador
+  // (sessionStorage), não a cada troca de página dentro do app.
+  // ------------------------------------------------------------------------
+
+  async function sha256Hex(texto) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function temPin() {
+    return !!(await buscarConfiguracao('pin_hash', null));
+  }
+
+  async function definirPin(pin) {
+    return salvarConfiguracao('pin_hash', await sha256Hex(pin));
+  }
+
+  async function verificarPin(pin) {
+    const hash = await sha256Hex(pin);
+    const salvo = await buscarConfiguracao('pin_hash', null);
+    return !!salvo && hash === salvo;
+  }
+
+  function criarOverlayPin() {
+    const overlay = document.createElement('div');
+    overlay.id = 'mf-pin-overlay';
+    overlay.innerHTML = `
+      <div class="mf-pin-caixa">
+        <div class="mf-pin-titulo">MEU FINANCEIRO</div>
+        <div class="mf-pin-mensagem" id="mf-pin-mensagem"></div>
+        <div class="mf-pin-circulos" id="mf-pin-circulos">
+          ${Array.from({ length: 6 }).map(() => '<span class="mf-pin-circulo"></span>').join('')}
+        </div>
+        <input type="password" inputmode="numeric" autocomplete="off" maxlength="6" id="mf-pin-input" class="mf-pin-input-real" />
+        <button type="button" id="mf-pin-confirmar" class="btn btn-primario mf-pin-confirmar">CONFIRMAR</button>
+        <button type="button" id="mf-pin-esqueci" class="mf-pin-esqueci">Esqueci o PIN</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function exigirPin() {
+    if (sessionStorage.getItem('mf_pin_ok') === '1') return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
+          const jaTemPin = await temPin();
+          const overlay = criarOverlayPin();
+          const input = overlay.querySelector('#mf-pin-input');
+          const mensagem = overlay.querySelector('#mf-pin-mensagem');
+          const circulosEl = overlay.querySelector('#mf-pin-circulos');
+          const caixa = overlay.querySelector('.mf-pin-caixa');
+
+          let modo = jaTemPin ? 'verificar' : 'criar-1';
+          let primeiroPin = '';
+          mensagem.textContent = jaTemPin ? 'Digite seu PIN' : 'Crie um PIN de 4 a 6 dígitos';
+
+          function redraw() {
+            const digitos = input.value.length;
+            circulosEl.querySelectorAll('.mf-pin-circulo').forEach((c, i) => {
+              c.classList.toggle('preenchido', i < digitos);
+            });
+          }
+
+          function mostrarErro(msg) {
+            mensagem.textContent = msg;
+            caixa.classList.remove('mf-pin-shake');
+            void caixa.offsetWidth;
+            caixa.classList.add('mf-pin-shake');
+            input.value = '';
+            redraw();
+          }
+
+          async function finalizar() {
+            const valor = input.value;
+            if (valor.length < 4) { mostrarErro('Use de 4 a 6 dígitos.'); return; }
+
+            if (modo === 'criar-1') {
+              primeiroPin = valor;
+              input.value = '';
+              redraw();
+              modo = 'criar-2';
+              mensagem.textContent = 'Confirme o PIN';
+              return;
+            }
+
+            if (modo === 'criar-2') {
+              if (valor !== primeiroPin) {
+                modo = 'criar-1';
+                primeiroPin = '';
+                mostrarErro('Os PINs não coincidem. Crie de novo.');
+                return;
+              }
+              await definirPin(valor);
+              sessionStorage.setItem('mf_pin_ok', '1');
+              overlay.remove();
+              resolve();
+              return;
+            }
+
+            // modo === 'verificar'
+            const ok = await verificarPin(valor);
+            if (ok) {
+              sessionStorage.setItem('mf_pin_ok', '1');
+              overlay.remove();
+              resolve();
+            } else {
+              mostrarErro('PIN incorreto. Tente de novo.');
+            }
+          }
+
+          input.addEventListener('input', () => {
+            input.value = input.value.replace(/\D/g, '').slice(0, 6);
+            redraw();
+            if (input.value.length === 6) finalizar();
+          });
+          input.addEventListener('keydown', (e) => { if (e.key === 'Enter') finalizar(); });
+          overlay.querySelector('#mf-pin-confirmar').addEventListener('click', finalizar);
+          overlay.querySelector('#mf-pin-esqueci').addEventListener('click', () => {
+            alert('Para redefinir, limpe os dados do site nas configurações do navegador (isso apaga todos os dados).');
+          });
+
+          setTimeout(() => input.focus(), 50);
+        } catch (e) {
+          console.error('Erro na tela de PIN:', e);
+          reject(e);
+        }
+      })();
+    });
+  }
+
+  return {
+    abrirBanco,
+    Util,
+    salvarLancamento, excluirLancamento, buscarLancamentoPorId, buscarPorMesAno,
+    buscarSaidasPorSituacao, buscarAnosDisponiveis,
+    salvarHistoricoAnualManual, buscarHistoricoAnual,
+    salvarConfiguracao, buscarConfiguracao,
+    salvarCartao, excluirCartao, buscarCartaoPorId, buscarCartoes,
+    salvarGastoCartao, excluirGastoCartao, buscarGastosPorCartao,
+    calcularJurosTotais, vincularSaidaAoCartao,
+    exportarTudo, importarBackup,
+    Auth: { temPin, definirPin, verificarPin, exigirPin }
+  };
+})();
