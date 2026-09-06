@@ -6,11 +6,17 @@
   }
 
   async function invoke(action, payload) {
-    const { data, error } = await supabase.functions.invoke(EDGE_FUNCTION, {
-      body: { action, ...payload },
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/${EDGE_FUNCTION}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ action, ...payload }),
     });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data?.error) throw new Error(data?.error || "Falha ao chamar a autenticação.");
     return data;
   }
 
