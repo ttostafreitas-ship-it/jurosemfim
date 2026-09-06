@@ -78,8 +78,14 @@ serve(async (request) => {
         }),
       });
       if (!emailResponse.ok) {
+        // DIAGNÓSTICO: devolve o motivo exato da recusa do Resend (status + corpo).
+        // Depois de identificar a causa, volte esta mensagem para algo genérico.
+        const detalhe = await emailResponse.text().catch(() => "");
+        console.error("Resend recusou o envio:", emailResponse.status, "from=", sender, "to=", email, detalhe);
         await admin.auth.admin.deleteUser(created.data.user.id);
-        return json({ error: "Não foi possível enviar o email de acesso." }, 502);
+        return json({
+          error: `Resend recusou [HTTP ${emailResponse.status}] (from: ${sender}) - ${detalhe.slice(0, 400)}`,
+        }, 502);
       }
       return json({ ok: true, email_sent: true });
     }
